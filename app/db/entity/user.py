@@ -1,12 +1,15 @@
 from typing import Optional
 from sqlmodel import SQLModel, Field
 from datetime import datetime
-
+from uuid import UUID, uuid4 # uuid 임포트
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID # PG_UUID 임포트
+from sqlalchemy import Column
 
 class User(SQLModel, table=True):
     __tablename__ = "users"
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    # id 타입을 UUID로 변경
+    id: UUID = Field(primary_key=True, index=True)
     google_id: str = Field(index=True, unique=True, nullable=True)
     email: str = Field(index=True, unique=True, nullable=False)
     name: Optional[str]
