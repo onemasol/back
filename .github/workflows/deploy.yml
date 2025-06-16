@@ -9,10 +9,8 @@ on:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest # Runner's OS
+    runs-on: ubuntu-latest
     steps:
-      # 1. SSH 접속 및 배포 스크립트 실행
-      # (이제 checkout 단계가 필요 없습니다. 서버에서 직접 git pull 할 것이기 때문입니다.)
       - name: Deploy to EC2 instance
         uses: appleboy/ssh-action@master
         with:
@@ -22,26 +20,20 @@ jobs:
           script: |
             # --- 배포 스크립트 시작 ---
 
-            # 1. 변수 설정
-            # git pull을 실행할 영구적인 소스 코드 폴더
-            SOURCE_DIR="/home/ec2-user/back" 
-            RELEASES_DIR="/home/ec2-user/releases"
-            CURRENT_SYMLINK="/home/ec2-user/back/current"
+            # 1. 변수 설정 (분리된 경로 구조)
+            SOURCE_DIR="/home/ec2-user/back"
+            APP_DIR="/home/ec2-user/deploy"
+            RELEASES_DIR="$APP_DIR/releases"
+            CURRENT_SYMLINK="$APP_DIR/current"
             NEW_RELEASE_DIR="$RELEASES_DIR/$(date +%Y%m%d%H%M%S)"
 
             echo ">>> 1. Pulling latest code from GitHub..."
-            # SOURCE_DIR이 없으면 git clone, 있으면 git pull 실행
-            if [ -d "$SOURCE_DIR" ]; then
-              cd "$SOURCE_DIR"
-              git pull origin dev-master
-            else
-              git clone https://github.com/onemasol/back.git "$SOURCE_DIR"
-              cd "$SOURCE_DIR"
-            fi
+            cd $SOURCE_DIR
+            git pull origin dev-master
             
             echo ">>> 2. Creating new release from source..."
             # 최신 코드를 새로운 릴리즈 폴더로 복사
-            cp -R "$SOURCE_DIR" "$NEW_RELEASE_DIR"
+            cp -R $SOURCE_DIR "$NEW_RELEASE_DIR"
             cd "$NEW_RELEASE_DIR"
 
             echo ">>> 3. Setting up Python environment..."
@@ -51,14 +43,16 @@ jobs:
             pip install gunicorn
 
             echo ">>> 4. Creating .env file..."
-            # ⚠️ DB_URL과 SECRET_KEY를 GitHub Actions Secret에 반드시 등록해야 합니다.
+            # GitHub Repository Secrets에 DB_URL과 SECRET_KEY를 반드시 등록해야 합니다.
             echo "DB_URL=${{ secrets.DB_URL }}" >> .env
             echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> .env
 
             echo ">>> 5. Switching symbolic link to new release..."
+            # 심볼릭 링크를 새로운 릴리즈 폴더로 변경
             ln -sfn "$NEW_RELEASE_DIR" "$CURRENT_SYMLINK"
 
             echo ">>> 6. Restarting application service..."
+            # Systemd 서비스 재시작
             sudo systemctl restart onemasol
 
             echo "🚀 Deployment successful to $NEW_RELEASE_DIR"
