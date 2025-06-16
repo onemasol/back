@@ -1,25 +1,18 @@
 # 워크플로우의 이름
 name: Deploy to EC2
 
-# 언제 이 워크플로우를 실행할지 정의 (main 브랜치에 push 될 때)
+# dev-master 브랜치에 push 될 때 실행
 on:
   push:
     branches:
-      - dev-master  # dev-master 브랜치에 push 될 때 실행
+      - dev-master
 
-# 실행될 작업(Job)들을 정의
 jobs:
   deploy:
-    # 이 작업이 실행될 가상 환경을 정의 (Ubuntu 최신 버전)
-    runs-on: ubuntu-latest
-
-    # 작업의 단계(Step)들을 정의
+    runs-on: ubuntu-latest # Runner's OS
     steps:
-      # 1. GitHub 리포지토리의 코드를 Runner로 가져옴
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      # 2. SSH 접속 및 배포 스크립트 실행
+      # 1. SSH 접속 및 배포 스크립트 실행
+      # (이제 checkout 단계가 필요 없습니다. 서버에서 직접 git pull 할 것이기 때문입니다.)
       - name: Deploy to EC2 instance
         uses: appleboy/ssh-action@master
         with:
@@ -27,45 +20,45 @@ jobs:
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.KEY }}
           script: |
-            # 배포 스크립트 시작
-            # 새로운 릴리즈 폴더 이름을 타임스탬프로 생성
-            RELEASE_DIR_NAME=$(date +%Y%m%d%H%M%S)
+            # --- 배포 스크립트 시작 ---
+
+            # 1. 변수 설정
+            # git pull을 실행할 영구적인 소스 코드 폴더
+            SOURCE_DIR="/home/ec2-user/back" 
+            RELEASES_DIR="/home/ec2-user/releases"
+            CURRENT_SYMLINK="/home/ec2-user/back/current"
+            NEW_RELEASE_DIR="$RELEASES_DIR/$(date +%Y%m%d%H%M%S)"
+
+            echo ">>> 1. Pulling latest code from GitHub..."
+            # SOURCE_DIR이 없으면 git clone, 있으면 git pull 실행
+            if [ -d "$SOURCE_DIR" ]; then
+              cd "$SOURCE_DIR"
+              git pull origin dev-master
+            else
+              git clone https://github.com/onemasol/back.git "$SOURCE_DIR"
+              cd "$SOURCE_DIR"
+            fi
             
-            # 프로젝트 폴더로 이동 
-            cd /home/ec2-user/onemasol/back
+            echo ">>> 2. Creating new release from source..."
+            # 최신 코드를 새로운 릴리즈 폴더로 복사
+            cp -R "$SOURCE_DIR" "$NEW_RELEASE_DIR"
+            cd "$NEW_RELEASE_DIR"
 
-            # 릴리즈 폴더 생성
-            mkdir -p releases/$RELEASE_DIR_NAME
-
-            # 최신 코드를 릴리즈 폴더에 복사
-            # 실제로는 git clone 또는 git pull 후 복사하는 것이 더 안정적입니다.
-            # 여기서는 간단하게 현재 Runner에 있는 코드를 압축해서 전송하는 방식을 사용합니다.
-            # 하지만 ssh-action은 코드를 자동으로 전송해주므로 이 단계는 ssh-action이 처리합니다.
-            
-            # 아래는 EC2 서버에서 실행될 스크립트입니다.
-            # ssh-action이 코드를 /home/ec2-user/ 에 .tar.gz로 복사하고 압축을 풉니다.
-            # 그 후 아래 스크립트를 실행합니다.
-            
-            # 최신 코드를 새로운 릴리즈 폴더로 이동
-            mv /home/ec2-user/* /home/ec2-user/onemasol/back/releases/$RELEASE_DIR_NAME/
-
-            # 새 릴리즈 폴더로 이동
-            cd /home/ec2-user/onemasol/back/releases/$RELEASE_DIR_NAME
-
-            # 파이썬 가상 환경 생성 및 패키지 설치
+            echo ">>> 3. Setting up Python environment..."
             python3 -m venv venv
             source venv/bin/activate
             pip install -r requirements.txt
             pip install gunicorn
 
-            # .env 파일 생성 (Secrets를 이용해 안전하게)
+            echo ">>> 4. Creating .env file..."
+            # ⚠️ DB_URL과 SECRET_KEY를 GitHub Actions Secret에 반드시 등록해야 합니다.
             echo "DB_URL=${{ secrets.DB_URL }}" >> .env
             echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> .env
-            
-            # 심볼릭 링크를 새로운 릴리즈 폴더로 변경
-            ln -sfn /home/ec2-user/onemasol/back/releases/$RELEASE_DIR_NAME /home/ec2-user/onemasol/back/current
-            
-            # Gunicorn 서비스 재시작
+
+            echo ">>> 5. Switching symbolic link to new release..."
+            ln -sfn "$NEW_RELEASE_DIR" "$CURRENT_SYMLINK"
+
+            echo ">>> 6. Restarting application service..."
             sudo systemctl restart onemasol
-            
-            echo "🚀 Deployment successful!"
+
+            echo "🚀 Deployment successful to $NEW_RELEASE_DIR"
