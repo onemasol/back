@@ -43,7 +43,7 @@ jobs:
             pip install gunicorn
 
             echo ">>> 4. Creating .env file..."
-            # GitHub Repository Secrets에 DB_URL과 SECRET_KEY를 반드시 등록해야 합니다.
+            # .env 파일 생성
             echo "DB_URL=${{ secrets.DB_URL }}" >> .env
             echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> .env
 
