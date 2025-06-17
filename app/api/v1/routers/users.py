@@ -36,8 +36,8 @@ async def signup_user(
     # 새로운 사용자 생성
     user = User(
         email=dto.email,
-        nickname=dto.name,
-        google_user_id=None,
+        name=dto.name,
+        google_id=None,
         is_deleted=False,
     )
     session.add(user)

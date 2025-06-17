@@ -9,10 +9,11 @@ class User(SQLModel, table=True):
     __tablename__ = "users"
 
     # id 타입을 UUID로 변경
-    id: UUID = Field(primary_key=True, index=True)
-    google_id: str = Field(index=True, unique=True, nullable=True)
+    id: UUID = Field( default_factory=uuid4,
+                     sa_column=Column(PG_UUID, primary_key=True, nullable=False, unique=True))
+    google_id: Optional[str] = Field(index=True, unique=True, nullable=True, default=None)
     email: str = Field(index=True, unique=True, nullable=False)
-    name: Optional[str]
+    name: Optional[str] = Field(default=None)
     provider: str = Field(default="google", description="사용자 인증 제공자")
     is_deleted: bool = Field(default=False)
     created_at: datetime = Field(default_factory=datetime.utcnow)
