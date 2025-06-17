@@ -1,10 +1,11 @@
 # app/integrations/google.py
 
 import httpx
+from typing import Union
 
 GOOGLE_TOKENINFO_URL = "https://oauth2.googleapis.com/tokeninfo"
 
-async def verify_token(id_token: str) -> dict | None:
+async def verify_token(id_token: str) -> Union[dict, None]:
     """
     Google OAuth2 ID 토큰 검증 함수
 
