@@ -13,7 +13,7 @@ def create_app() -> FastAPI:
         version="0.1.0",
         description="자영업자 비서형 캘린더 + AI 에이전트",
         default_response_class=CustomJSONResponse,
-        dependencies=[Depends(http_bearer_scheme)] # <<< 2. 앱 생성자에 이 부분을 추가합니다.
+        #dependencies=[Depends(http_bearer_scheme)] # <<< 2. 앱 생성자에 이 부분을 추가합니다.
     )
    
 
