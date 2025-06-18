@@ -14,44 +14,48 @@ class CalendarService:
     """
     캘린더 CRUD 전담
     """
-    async def read_events(self, session: AsyncSession):
-        result = await session.execute(select(Event))
+    async def read_events(self, session: AsyncSession, user_id: UUID):
+        result = await session.execute(
+            select(Event).where(Event.user_id == str(user_id)) 
+        )
         events = result.scalars().all()
         return [dump_with_formatted_datetime(EventRead.from_orm(e)) for e in events]
     
-    async def create_event(seflf, event: EventCreateDTO, session: AsyncSession = Depends(get_session)):
-        new_event = Event.from_orm(event)
+    async def create_event(self, event: EventCreateDTO, user_id: UUID, session: AsyncSession = Depends(get_session)):
+        data= event.model_dump()
+        data["user_id"] = str(user_id)
+        new_event = Event(**data)
         session.add(new_event)
         await session.commit()
         await session.refresh(new_event)
         return dump_with_formatted_datetime(EventRead.from_orm(new_event))
     
-    async def read_event(self, event_id: UUID, session: AsyncSession):
-        event = await session.get(Event, event_id)
-        if not event:
+    async def read_event(self, event_id: UUID, user_id: UUID, session: AsyncSession):
+        stmt = select(Event).where(Event.id == event_id, Event.user_id == str(user_id))
+        result = await session.exec(stmt)
+        ev = result.first()
+        if not ev:
             raise HTTPException(status_code=404, detail="Event not found")
-        return dump_with_formatted_datetime(EventRead.from_orm(event))
+        return dump_with_formatted_datetime(EventRead.from_orm(ev))
 
-    async def update_event(self, event_id: UUID, event_data: EventUpdateDTO, session: AsyncSession):
-        event = await session.get(Event, event_id)
-        if not event:
+    async def update_event(self, event_id: UUID, dto: EventUpdateDTO, user_id: UUID, session: AsyncSession):
+        stmt = select(Event).where(Event.id == event_id, Event.user_id == str(user_id))
+        ev = (await session.exec(stmt)).first()
+        if not ev:
             raise HTTPException(status_code=404, detail="Event not found")
-
-        for k, v in event_data.dict(exclude_unset=True).items():
-            setattr(event, k, v)
-
-        # created_at은 그대로 두고 updated_at만 다시 설정
-        event.updated_at = datetime.now(timezone.utc)
-
-        session.add(event)
+        for k, v in dto.dict(exclude_unset=True).items():
+            setattr(ev, k, v)
+        ev.updated_at = datetime.now(timezone.utc)
+        session.add(ev)
         await session.commit()
-        await session.refresh(event)
-        return dump_with_formatted_datetime(EventRead.from_orm(event))
+        await session.refresh(ev)
+        return dump_with_formatted_datetime(EventRead.from_orm(ev))
 
-    async def delete_event(self, event_id: UUID, session: AsyncSession):
-        event = await session.get(Event, event_id)
-        if not event:
+    async def delete_event(self, event_id: UUID, user_id: UUID, session: AsyncSession):
+        stmt = select(Event).where(Event.id == event_id, Event.user_id == str(user_id))
+        ev = (await session.exec(stmt)).first()
+        if not ev:
             raise HTTPException(status_code=404, detail="Event not found")
-        await session.delete(event)
+        await session.delete(ev)
         await session.commit()
         return {"ok": True, "message": "Event deleted"}
