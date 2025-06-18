@@ -2,6 +2,9 @@ from fastapi import Header, HTTPException
 from datetime import datetime, timedelta
 from jose import jwt
 from app.core.config import settings
+from fastapi.security import OAuth2PasswordBearer
+
+
 
 def get_token_from_header(authorization: str = Header(...)) -> str:
     if not authorization.startswith("Bearer "):
