@@ -9,6 +9,8 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "원 마 솔 Assistant"
     DB_URL: str = Field(..., env="DB_URL")
     SECRET_KEY: str = Field(..., env="SECRET_KEY")  # ← 여기에 추가!
+    GOOGLE_CLIENT_ID: str = Field(..., env="GOOGLE_CLIENT_ID")
+    GOOGLE_CLIENT_SECRET: str = Field(..., env="GOOGLE_CLIENT_SECRET")
 ##    MODEL_ENDPOINT: str = Field(..., env="MODEL_ENDPOINT")
 ##    OCR_ENDPOINT: str   = Field(..., env="OCR_ENDPOINT")
 

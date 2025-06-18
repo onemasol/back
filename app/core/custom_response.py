@@ -2,6 +2,8 @@ from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 from datetime import datetime
 
+
+# DATAETIME 포맷팅을 위한 커스텀 JSON 응답 클래스
 class CustomJSONResponse(JSONResponse):
     def render(self, content: any) -> bytes:
         def format_datetime(obj):

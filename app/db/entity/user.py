@@ -11,7 +11,7 @@ class User(SQLModel, table=True):
     # id 타입을 UUID로 변경
     id: UUID = Field( default_factory=uuid4,
                      sa_column=Column(PG_UUID, primary_key=True, nullable=False, unique=True))
-    google_id: Optional[str] = Field(index=True, unique=True, nullable=True, default=None)
+    google_user_id: Optional[str] = Field(index=True, unique=True, nullable=True, default=None)
     email: str = Field(index=True, unique=True, nullable=False)
     name: Optional[str] = Field(default=None)
     provider: str = Field(default="google", description="사용자 인증 제공자")
