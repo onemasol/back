@@ -1,1 +1,1 @@
-"# 26th-conference-OneMaSol" 
+원마솔 개발 브런치
