@@ -1,0 +1,14 @@
+# requirements.txt
+
+asyncpg>=0.29.0
+fastapi
+gunicorn
+httpx
+passlib[bcrypt]
+pydantic[email]
+pydantic-settings
+python-dotenv
+python-jose
+sqlmodel
+uvicorn[standard]
+python-multipart
