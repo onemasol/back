@@ -16,6 +16,11 @@ class Settings(BaseSettings):
 ##    MODEL_ENDPOINT: str = Field(..., env="MODEL_ENDPOINT")
 ##    OCR_ENDPOINT: str   = Field(..., env="OCR_ENDPOINT")
 
+    # JWT Settings
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60  # 60분
+    REFRESH_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7일
+
     class Config:
         env_file = ".env"
         case_sensitive = True

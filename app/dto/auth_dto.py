@@ -16,8 +16,17 @@ class GoogleToken(BaseModel):
 class LoginResponse(BaseModel):
     """로그인 성공 시 반환할 access_token DTO"""
     access_token: str
+    refresh_token: str  # refresh_token 필드 추가
     token_type: str = "bearer"
     
+
+class RefreshTokenRequest(BaseModel):
+    refresh_token: str
+
+class RefreshTokenResponse(BaseModel):
+    """토큰 갱신 성공 시 새로운 access_token을 반환할 DTO"""
+    access_token: str
+    token_type: str = "bearer"
 
 class GoogleTokenInfo(BaseModel):
     """Google id_token 검증 후 얻게 되는 사용자 정보 DTO"""

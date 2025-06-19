@@ -3,9 +3,11 @@
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel import select
 from app.db.entity.user import User
-from app.dto.auth_dto import GoogleTokenInfo, LoginResponse
+from fastapi import HTTPException, status
+from jose import JWTError
+from app.dto.auth_dto import GoogleTokenInfo, LoginResponse, RefreshTokenRequest, RefreshTokenResponse
 from app.integrations import google
-from app.core.security import create_access_token
+from app.core.security import create_access_token, create_refresh_token, decode_access_token
 
 
 class AuthService:
@@ -58,7 +60,41 @@ class AuthService:
         # 2. 사용자 정보로 DB에서 유저 조회 또는 생성
         user = await self._get_or_create_user(token_info)
 
-        # 3. 내부 서비스용 Access Token 생성
+        # 3. 내부 서비스용 Access Token 및 Refresh Token 생성
         access_token = create_access_token(subject=str(user.id))
+        refresh_token = create_refresh_token(subject=str(user.id))
         
-        return LoginResponse(access_token=access_token)
+        # LoginResponse에 두 토큰을 모두 담아 반환
+        return LoginResponse(
+            access_token=access_token,
+            refresh_token=refresh_token
+        )
+    
+    async def refresh_access_token(self, req: RefreshTokenRequest) -> RefreshTokenResponse:
+        """
+        Refresh Token을 사용하여 새로운 Access Token을 발급
+        """
+        credentials_exception = HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+        try:
+            payload = decode_access_token(req.refresh_token)
+            user_id: str = payload.get("sub")
+            if user_id is None:
+                raise credentials_exception
+        except JWTError:
+            raise credentials_exception
+
+        # 비동기로 사용자 조회
+        query = select(User).where(User.id == user_id) # user.id가 int일 경우를 대비
+        result = await self.session.exec(query)
+        user = result.first()
+
+        if user is None:
+            raise credentials_exception
+        
+        # 새로운 Access Token 생성
+        new_access_token = create_access_token(subject=str(user.id))
+        return RefreshTokenResponse(access_token=new_access_token)
