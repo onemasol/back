@@ -27,35 +27,34 @@ jobs:
             CURRENT_SYMLINK="$APP_DIR/current"
             NEW_RELEASE_DIR="$RELEASES_DIR/$(date +%Y%m%d%H%M%S)"
 
-            echo ">>> 1. Pulling latest code from GitHub..."
-            cd $SOURCE_DIR
-            git pull origin dev-master
-            
-            echo ">>> 2. Creating new release from source..."
-            # 최신 코드를 새로운 릴리즈 폴더로 복사
-            cp -R $SOURCE_DIR "$NEW_RELEASE_DIR"
+            # GitHub 저장소 주소 (SSH 방식)
+            REPO_URL="https://github.com/onemasol/back.git"
+
+            echo ">>> 1. Cloning latest code into a new release directory..."
+            # 기존의 git pull & cp 대신, 새 릴리즈 폴더로 직접 git clone을 실행
+            git clone --depth 1 --branch dev-master $REPO_URL "$NEW_RELEASE_DIR"
             cd "$NEW_RELEASE_DIR"
 
-            echo ">>> 3. Setting up Python environment..."
+            echo ">>> 2. Setting up Python environment..."
             python3 -m venv venv
             source venv/bin/activate
             pip install -r requirements.txt
             pip install gunicorn
 
-            echo ">>> 4. Creating .env file..."
+            echo ">>> 3. Creating .env file..."
             # .env 파일 생성
             echo "DB_URL=${{ secrets.DB_URL }}" >> .env
             echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> .env
             echo "GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}" >> .env
             echo "GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}" >> .env
-            echo "CLOVA_OCR_APIGW_URL=${{ secrets.CLOVA_OCR_APIGW_URL }}" >> .env
+            echo "CLOVA_OCR_APIGW_URL=${{ secrets.CLOVA_OCR_APIGW_URL }}" >> .env 
             echo "CLOVA_OCR_SECRET_KEY=${{ secrets.CLOVA_OCR_SECRET_KEY }}" >> .env
 
-            echo ">>> 5. Switching symbolic link to new release..."
+            echo ">>> 4. Switching symbolic link to new release..."
             # 심볼릭 링크를 새로운 릴리즈 폴더로 변경
             ln -sfn "$NEW_RELEASE_DIR" "$CURRENT_SYMLINK"
 
-            echo ">>> 6. Restarting application service..."
+            echo ">>> 5. Restarting application service..."
             # Systemd 서비스 재시작
             sudo systemctl restart onemasol
 
