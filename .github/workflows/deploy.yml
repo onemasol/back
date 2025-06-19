@@ -48,7 +48,7 @@ jobs:
             echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> .env
             echo "GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}" >> .env
             echo "GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}" >> .env
-            echo "CLOVA_OCR_APRIGW_URL=${{ secrets.CLOVA_OCR_APRIGW_URL }}" >> .env
+            echo "CLOVA_OCR_APIGW_URL=${{ secrets.CLOVA_OCR_APRIGW_URL }}" >> .env
             echo "CLOVA_OCR_SECRET_KEY=${{ secrets.CLOVA_OCR_SECRET_KEY }}" >> .env
 
             echo ">>> 5. Switching symbolic link to new release..."
