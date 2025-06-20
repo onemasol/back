@@ -45,8 +45,6 @@ jobs:
             # .env 파일 생성
             echo "DB_URL=${{ secrets.DB_URL }}" >> .env
             echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> .env
-            echo "GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}" >> .env
-            echo "GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}" >> .env
             echo "CLOVA_OCR_APIGW_URL=${{ secrets.CLOVA_OCR_APIGW_URL }}" >> .env 
             echo "CLOVA_OCR_SECRET_KEY=${{ secrets.CLOVA_OCR_SECRET_KEY }}" >> .env
             echo "GOOGLE_ALLOWED_CLIENT_IDS=${{ secrets.GOOGLE_ALLOWED_CLIENT_IDS }}" >> .env
