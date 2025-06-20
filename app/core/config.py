@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     CLOVA_OCR_SECRET_KEY: str = Field(..., env="CLOVA_OCR_SECRET_KEY")
 ##    MODEL_ENDPOINT: str = Field(..., env="MODEL_ENDPOINT")
 ##    OCR_ENDPOINT: str   = Field(..., env="OCR_ENDPOINT")
-
+    GOOGLE_ALLOWED_CLIENT_IDS: str = Field(..., env="GOOGLE_ALLOWED_CLIENT_IDS")
     # JWT Settings
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60  # 60분
