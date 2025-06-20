@@ -13,3 +13,6 @@ sqlmodel
 uvicorn[standard]
 python-multipart
 google-auth
+google-api-python-client
+google-auth-oauthlib
+requests
