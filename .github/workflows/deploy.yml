@@ -49,6 +49,7 @@ jobs:
             echo "GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}" >> .env
             echo "CLOVA_OCR_APIGW_URL=${{ secrets.CLOVA_OCR_APIGW_URL }}" >> .env 
             echo "CLOVA_OCR_SECRET_KEY=${{ secrets.CLOVA_OCR_SECRET_KEY }}" >> .env
+            echo "GOOGLE_ALLOWED_CLEIENT_IDS=${{ secrets.GOOGLE_ALLOWED_CLIENT_IDS }}" >> .env
 
             echo ">>> 4. Switching symbolic link to new release..."
             # 심볼릭 링크를 새로운 릴리즈 폴더로 변경
