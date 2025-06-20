@@ -9,6 +9,17 @@ from app.dto.event_dto import EventCreateDTO
 from app.dto.task_dto import TaskCreateDTO
 
 
+# --- process-image API를 위한 응답 DTO ---
+class ProcessImageResponse(BaseModel):
+    """
+    POST /process-image API의 응답 모델
+    """
+    doc_id: uuid.UUID
+    status: str
+    message: str = "문서 처리가 시작되었습니다. 상태를 확인해주세요."
+
+
+
 class DocumentStatusResponse(BaseModel):
     """
     GET /status API의 응답 모델

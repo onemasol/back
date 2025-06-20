@@ -1,8 +1,9 @@
 # app/db/entity/document.py
 
-from uuid import UUID 
+import uuid
 from datetime import datetime
 from typing import Optional, List, Dict, Any
+from sqlalchemy.dialects.postgresql import UUID
 from sqlmodel import Enum, Field, SQLModel, JSON, Column
 
 from pydantic import ConfigDict
@@ -13,16 +14,21 @@ class DocumentStatus(str, Enum):
      COMPLETED = "COMPLETED" # 사용자가 확정하여 일정 저장 완료
      FAILED = "FAILED" # 처리 실패
 
+
+
 class Document(SQLModel, table=True):
 # --- 👇 여기에 model_config를 추가! ---
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     # API의 {doc_id}로 사용될 고유 ID
-    doc_id: UUID = Field(primary_key=True, index=True)
-    user_id: UUID = Field(nullable=False)
+    doc_id: uuid.UUID = Field(
+        default_factory=uuid.uuid4,
+        sa_column=Column(UUID, primary_key=True, nullable=False),
+    )
+    user_id: uuid.UUID = Field(nullable=False)
 
     # 이 문서가 속한 채팅 세션의 ID
-    session_id: UUID = Field(nullable=False)
+    session_id: uuid.UUID = Field(nullable=False)
 
     
     # 처리 상태

@@ -59,3 +59,4 @@ class OcrService:
         except Exception as e:
             logger.error(f"An unexpected error occurred during CLOVA OCR API call: {e}")
             raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {str(e)}")
+        

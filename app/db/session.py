@@ -21,8 +21,11 @@ async def init_db():
     """
     Initialize the database (create tables).
     """
-    import app.db.entity.user
-    import app.db.entity.event
+    #import app.db.entity.user
+    #import app.db.entity.event
+    #import app.db.entity.task
+    #from app.db.entity.document import Document
+    print("🔄 Initializing database...")
 
     async with engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.create_all)
