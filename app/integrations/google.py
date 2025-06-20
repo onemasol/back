@@ -1,43 +1,46 @@
 # app/integrations/google.py
 
-import httpx
+from google.oauth2 import id_token
+from google.auth.transport import requests
 from fastapi import HTTPException, status
+import logging
 from app.core.config import settings
 from app.dto.auth_dto import GoogleTokenInfo
 
-async def verify_google_id_token(id_token: str) -> GoogleTokenInfo:
+logger = logging.getLogger(__name__)
+
+async def verify_google_id_token(token: str) -> GoogleTokenInfo:
     """
-    Google ID 토큰을 검증하고 사용자 정보를 담은 DTO를 반환합니다.
-    불필요한 userinfo API 호출을 제거하여 효율성을 높입니다.
+    Google ID 토큰을 검증하고, 여러 클라이언트 ID를 지원합니다.
     """
-    async with httpx.AsyncClient() as client:
-        try:
-            response = await client.get(
-                "https://oauth2.googleapis.com/tokeninfo",
-                params={"id_token": id_token}
-            )
-            response.raise_for_status()  # 2xx 상태 코드가 아니면 예외 발생
-            
-            token_info_data = response.json()
+    try:
+        # 1. 특정 client_id를 지정하지 않고, 토큰의 유효성(서명, 만료시간)만 먼저 검증
+        id_info = id_token.verify_oauth2_token(
+            token, requests.Request()
+        )
 
-            # 클라이언트 ID 검증
-            if token_info_data.get("aud") != settings.GOOGLE_CLIENT_ID:
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Invalid client ID in token."
-                )
+        # 2. 토큰에서 'aud' (audience, 대상 클라이언트 ID) 값을 추출
+        audience = id_info.get("aud")
+        if not audience:
+            raise ValueError("ID token is missing 'aud' claim.")
 
-            return GoogleTokenInfo(**token_info_data)
+        # 3. .env 파일에 설정된 허용된 클라이언트 ID 목록을 불러오기
+        allowed_client_ids = [
+            client_id.strip() for client_id in settings.GOOGLE_ALLOWED_CLIENT_IDS.split(',')
+        ]
 
-        except httpx.HTTPStatusError as e:
-            # 구글 서버에서 오류 응답이 온 경우
-            raise HTTPException(
-                status_code=e.response.status_code,
-                detail=f"Error verifying Google token: {e.response.text}"
-            )
-        except Exception as e:
-            # 네트워크 오류 또는 기타 예외
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"An unexpected error occurred during token verification: {str(e)}"
-            )
+        # 4. 토큰의 audience가 우리 서버가 허용한 목록에 있는지 직접 확인
+        if audience not in allowed_client_ids:
+            logger.warning(f"Unauthorized token audience: {audience}")
+            raise ValueError(f"Token's audience '{audience}' is not in the allowed list.")
+
+        # 5. 모든 검증을 통과하면, 사용자 정보를 DTO로 변환하여 반환
+        return GoogleTokenInfo(**id_info)
+
+    except ValueError as e:
+        # 토큰이 유효하지 않거나, audience가 일치하지 않는 모든 경우에 에러 처리
+        logger.error(f"Google token verification failed: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid Google token: {e}"
+        )
