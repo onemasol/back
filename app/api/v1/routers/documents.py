@@ -4,7 +4,15 @@ from fastapi import APIRouter, UploadFile, File, Form, Depends
 from pydantic import BaseModel
 from datetime import datetime
 from app.services.ocr_service import OcrService
-
+from app.dto.document_dto import (
+    ConfirmItemsRequest,
+    ConfirmItemsResponse,
+)
+from app.services.document_service import DocumentService
+import uuid
+from app.api.v1.deps import get_session, get_current_user
+from sqlmodel.ext.asyncio.session import AsyncSession
+from app.db.entity.user import User
 # 라우터를 생성
 router = APIRouter(prefix="/documents", tags=["Documents"])
 
@@ -49,3 +57,27 @@ async def process_image_and_data(
     
     # 3. 생성된 응답 객체를 반환
     return response_data
+
+@router.post(
+    "/{doc_id}/confirm",
+    response_model=ConfirmItemsResponse,
+    summary="추출 일정 저장 확정"
+)
+async def confirm_and_save_extracted_schedules(
+    doc_id: uuid.UUID,
+    request_body: ConfirmItemsRequest,
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+) -> ConfirmItemsResponse:
+    """
+    사용자가 선택한 일정들을 실제 캘린더(Event 테이블)에 저장합니다.
+    """
+    await DocumentService(session).confirm_and_save_items(
+        doc_id=doc_id,
+        user=current_user,
+        items_to_save=request_body
+    )
+    
+    return ConfirmItemsResponse(
+        message=f"요청하신 {type}가 성공적으로 저장되었습니다."
+    )
