@@ -13,7 +13,7 @@ from app.dto.task_dto import TaskCreateDTO, TaskReadDTO
 
 # DTO 임포트
 from app.dto.event_dto import EventCreateDTO, EventUpdateDTO
-from app.dto.task_dto import TaskCreateDTO
+from app.dto.task_dto import AgentTaskCreateDTO, TaskReadDTO
 
 # 라우터 설정
 router = APIRouter(prefix="/agent", tags=["Agent Task"])
@@ -25,14 +25,18 @@ task_service = TaskService()
 
 # --- 태스크 API (수정된 부분) ---
 
-# 태스크 생성 API
-@router.post("/tasks", summary="Task 생성", response_model=TaskReadDTO) 
-async def agent_create_task(
-    task_dto: TaskCreateDTO,
+@router.post("/tasks", summary="에이전트에 의한 Task 생성", response_model=TaskReadDTO)
+async def create_agent_task(
+    dto: AgentTaskCreateDTO, # 일반 DTO가 아닌 AgentTaskCreateDTO를 사용합니다.
     session: AsyncSession = Depends(get_session),
     user: User = Depends(get_current_user),
 ):
-    return await task_service.create_task(task_dto, user.id, session)
+    """
+    에이전트가 사용자를 위해 태스크를 생성합니다.
+    `used_agents` 필드에 어떤 에이전트가 사용되었는지 정보를 포함
+    """
+
+    return await task_service.create_task(dto, user.id, session)
 
 # 태스크 조회 API
 @router.get("/tasks/{task_id}", summary="Task 조회", response_model=TaskReadDTO)
