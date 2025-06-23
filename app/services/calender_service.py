@@ -22,12 +22,19 @@ class CalendarService:
         return [dump_with_formatted_datetime(EventRead.from_orm(e)) for e in events]
     
     async def create_event(self, event: EventCreateDTO, user_id: UUID, session: AsyncSession = Depends(get_session)):
-        data= event.model_dump()
-        data["user_id"] = str(user_id)
-        new_event = Event(**data)
+        event_data = event.model_dump()
+        used_agents_data = event_data.pop("used_agents", None)
+        # DB 모델 생성
+        new_event = Event(
+            **event_data,
+            user_id=str(user_id),
+            used_agents=used_agents_data
+        )
+        
         session.add(new_event)
         await session.commit()
         await session.refresh(new_event)
+        
         return dump_with_formatted_datetime(EventRead.from_orm(new_event))
     
     async def read_event(self, event_id: UUID, user_id: UUID, session: AsyncSession):

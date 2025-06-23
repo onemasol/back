@@ -74,3 +74,8 @@ class EventRead(_EventBase):
     end_at: dt.datetime
     location: Optional[str]
     # 필요한 필드를 더 추가하세요
+
+
+class AgentEventCreateDTO(EventCreateDTO):
+    """에이전트가 이벤트를 생성할 때 사용하는 DTO"""
+    created_by_agent: Optional[str] = Field(None, max_length=30, description="이벤트를 생성한 에이전트 이름")
