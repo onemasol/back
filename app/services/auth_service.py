@@ -35,14 +35,14 @@ class AuthService:
                 # 이메일이 같은 기존 사용자가 있으면 google_user_id 업데이트
                 user.google_user_id = token_info.sub
                 user.name = token_info.name
-                user.profile_image_url = token_info.picture
+                #user.profile_image_url = token_info.picture
             else:
                 # 3. 완전히 새로운 사용자 생성
                 user = User(
                     google_user_id=token_info.sub,
                     email=token_info.email,
                     name=token_info.name,
-                    profile_image_url=token_info.picture
+                    #profile_image_url=token_info.picture
                 )
         
         self.session.add(user)
