@@ -8,11 +8,8 @@ class ChatLog(SQLModel, table=True):
     session_id: UUID = Field(index=True)
     user_id: UUID = Field(index=True)
     task_id: Optional[UUID]
-    message: str
-    role: Optional[str]
-    agent_type: Optional[str]
-    step_order: Optional[int]
-    is_final_response: Optional[bool]
-    embedding_id: Optional[UUID]
+    event_id: Optional[UUID]
+    agent_response: Optional[str]
+    message: Optional[str]
     description: Optional[str]
     created_at: datetime = Field(default_factory=datetime.utcnow)
