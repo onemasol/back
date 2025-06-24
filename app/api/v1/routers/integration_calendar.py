@@ -11,16 +11,18 @@ from app.dto.event_dto import EventRead
 from app.dto.task_dto import TaskReadDTO
 from app.dto.integration_calendar_dto import UnifiedSearchResponse
 from app.services.integration_calendar_service import IntegrationCalendarService
+from uuid import UUID
 router = APIRouter(prefix="/calendar", tags=["Calendar Integration"])
 # 통합 조회 API
 
 @router.get(
-    "/all",
+    "/{user_id}/all",
     response_model=UnifiedSearchResponse,
     summary="통합 조회 (Events & Tasks)"
 )
 async def get_all_items(
-    current_user: User = Depends(get_current_user),
+    user_id: UUID,
+    #current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session)
 ) -> UnifiedSearchResponse:
     """
@@ -32,7 +34,8 @@ async def get_all_items(
     
     # 서비스 로직을 호출합니다.
     orm_items = await integration_service.get_unified_items_for_user(
-        user_id=current_user.id,
+        user_id=user_id,
+        #user_id=current_user.id,
         session=session
     )
 

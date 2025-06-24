@@ -31,7 +31,7 @@ class IntegrationCalendarService:
         # session.exec 를 session.execute 로 변경
         task_result = await session.execute(task_stmt)
         tasks = task_result.scalars().all()
-        # --- 수정 끝 ---
+        
 
         # 3. 두 리스트를 하나로 병합
         combined_list: List[Union[Event, Task]] = list(events) + list(tasks)
