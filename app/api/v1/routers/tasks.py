@@ -67,6 +67,17 @@ async def update_task(
     """
     return await task_service.update_task(task_id, current_user.id, dto, session)
 
+@router.put("/{task_id}/status", response_model=TaskReadDTO, summary="특정 태스크 상태 업데이트")
+async def update_task_status(
+    task_id: UUID,
+    session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    ID로 특정 태스크의 상태를 업데이트합니다.
+    """
+    return await task_service.complete_task(task_id, current_user.id, session)
+
 
 @router.delete("/{task_id}", status_code=204, summary="특정 태스크 삭제")
 async def delete_task(
