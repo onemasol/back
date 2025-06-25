@@ -33,3 +33,7 @@ class Task(SQLModel, table=True):
         default_factory=lambda: datetime.now(timezone.utc),
         sa_column=Column(DateTime(timezone=True), comment="마지막 수정 시각")
     )
+    due_at: Optional[datetime] = Field(
+        default=None,
+        sa_column=Column(DateTime(timezone=True), nullable=True, comment="마감 시각")
+    )

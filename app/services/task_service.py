@@ -58,6 +58,29 @@ class TaskService:
         await session.refresh(task_to_update)
 
         return TaskReadDTO.from_orm(task_to_update)
+    
+    async def complete_task(
+        self,
+        task_id: UUID,
+        user_id: UUID,
+        session: AsyncSession
+    ) -> TaskReadDTO:
+        """
+        status를 'complete'로 변경합니다.
+        """
+        result = await session.exec(
+            select(Task).where(Task.task_id == task_id, Task.user_id == user_id)
+        )
+        task = result.first()
+        if not task:
+            raise HTTPException(status_code=404, detail="Task not found or permission denied")
+
+        task.status = "complete"
+        task.updated_at = datetime.now(timezone.utc)
+        session.add(task)
+        await session.commit()
+        await session.refresh(task)
+        return TaskReadDTO.from_orm(task)
 
     async def delete_task(self, task_id: UUID, user_id: UUID, session: AsyncSession):
         """
