@@ -28,3 +28,41 @@ async def create_agent_event(
     """
 
     return await calendar_service.create_event(dto, user.id, session)
+
+@router.get("/events/{event_id}", summary="특정 Event 조회", response_model=dict)
+async def read_agent_event(
+    event_id: UUID,
+    session: AsyncSession = Depends(get_session),
+    user: User = Depends(get_current_user),
+):
+    """
+    `event_id`를 사용하여 특정 이벤트의 정보를 조회합니다.
+    - 해당 이벤트가 존재하지 않거나, 현재 사용자의 이벤트가 아니면 404 에러를 반환
+    """
+    return await calendar_service.read_event(event_id=event_id, user_id=user.id, session=session)
+
+@router.put("/events/{event_id}", summary="특정 Event 수정", response_model=dict)
+async def update_agent_event(
+    event_id: UUID,
+    dto: EventUpdateDTO, # 수정을 위한 DTO
+    session: AsyncSession = Depends(get_session),
+    user: User = Depends(get_current_user),
+):
+    """
+    `event_id`를 사용하여 특정 이벤트를 수정합니다.
+    - 해당 이벤트가 존재하지 않거나, 현재 사용자의 이벤트가 아니면 404 에러를 반환
+    """
+    return await calendar_service.update_event(event_id=event_id, dto=dto, user_id=user.id, session=session)
+
+@router.delete("/events/{event_id}", summary="특정 Event 삭제", response_model=dict)
+async def delete_agent_event(
+    evnent_id: UUID,
+    session: AsyncSession = Depends(get_session),
+    user: User = Depends(get_current_user),
+):
+    """
+    `event_id`를 사용하여 특정 이벤트를 삭제합니다.
+    - 해당 이벤트가 존재하지 않거나, 현재 사용자의 이벤트가 아니면 404 에러를 반환
+    """
+    return await calendar_service.delete_event(event_id=evnent_id, user_id=user.id, session=session)
+    
