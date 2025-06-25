@@ -24,11 +24,9 @@ ocr_service = OcrService()
 class OcrProcessResponse(BaseModel):
     user_id: str
     user_message: str
-    sent_at: datetime
     extracted_text: str
-    session_id: str  
 
-@router.post("/process-image", response_model=ProcessImageResponse, # 명확한 응답 모델 지정
+@router.post("/process-image", response_model=OcrProcessResponse, # 명확한 응답 모델 지정
     summary="이미지 처리 및 Document 생성")
 async def process_image_and_data(
     # multipart/form-data 형식의 요청을 처리
@@ -36,9 +34,7 @@ async def process_image_and_data(
     file: UploadFile = File(..., description="OCR 처리를 위한 이미지 파일"),
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
-    session_id: uuid.UUID = Form(..., description="현재 채팅 세션의 ID"),
     user_message: str = Form(..., description="사용자가 이미지와 함께 입력한 메시지 (맥락)"),
-    sent_at: datetime = Form(..., description="프론트엔드에서 요청을 보낸 시각 (ISO 8601 형식)")
 ):
     """
     이미지 파일과 사용자 데이터를 함께 받아 OCR 처리를 수행하고,
@@ -51,15 +47,15 @@ async def process_image_and_data(
     # 2. 모든 로직을 서비스에 위임합니다.
     new_doc = await doc_service.create_document_from_image(
         user=current_user,
-        session_id=session_id,
         user_message=user_message,
-        sent_at=sent_at,
         file=file
     )
     
     # 3. 서비스로부터 받은 결과로 최종 응답을 생성합니다.
-    return ProcessImageResponse(doc_id=new_doc.doc_id, status=new_doc.status)
-
+    return OcrProcessResponse(
+        user_id=str(current_user.id),
+        user_message=new_doc.user_message,
+        extracted_text=new_doc.extracted_text)
 
 @router.post(
     "/{doc_id}/confirm",

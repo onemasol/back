@@ -23,9 +23,7 @@ class DocumentService:
     async def create_document_from_image(
         self,
         user: User,
-        session_id: uuid.UUID,
         user_message: str,
-        sent_at: datetime,
         file: UploadFile
     ) -> Document:
         """
@@ -39,15 +37,12 @@ class DocumentService:
         # 지금은 임시로 빈 리스트를 사용합니다.
         extracted_schedules = []
 
-        sent_at_naive = sent_at.replace(tzinfo=None)
         # 3. 모든 정보를 취합하여 Document 객체를 생성하고 DB에 저장합니다.
         new_document = Document(
             user_id=user.id,
-            session_id=session_id,
             status="AWAITING_CONFIRMATION",  # AI 분석 후 사용자 확인 대기 상태
             extracted_text=extracted_text,
             user_message=user_message,
-            sent_at=sent_at_naive,
             extracted_schedules=extracted_schedules
         )
 
