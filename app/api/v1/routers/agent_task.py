@@ -3,7 +3,6 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel.ext.asyncio.session import AsyncSession
 from uuid import UUID
 
-from streamlit import status
 
 from app.api.v1.deps import get_session, get_current_user
 from app.db.entity.user import User
